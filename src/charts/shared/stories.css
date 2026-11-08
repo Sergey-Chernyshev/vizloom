@@ -1,0 +1,13 @@
+/* Story frames only (not shipped): a phone-wide sheet. */
+.sb-sheet-frame {
+  box-sizing: border-box;
+  max-inline-size: 390px;
+  padding: 16px;
+  border-radius: var(--vl-radius-l);
+  background: var(--vl-surface);
+  font: 13px var(--vl-font-family);
+  color: var(--vl-text-secondary);
+}
+.sb-sheet-frame--plain {
+  background: transparent;
+}

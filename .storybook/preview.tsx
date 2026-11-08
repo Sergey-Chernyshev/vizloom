@@ -9,11 +9,13 @@ import '../src/table/table.css';
 import '../src/dashboard/dashboard.css';
 import './preview.css';
 
-function ThemeRoot({ theme, locale, children }: { theme: string; locale: string; children: ReactNode }) {
+function ThemeRoot({ theme, locale, palette, children }: { theme: string; locale: string; palette: string; children: ReactNode }) {
   useEffect(() => {
     document.documentElement.dataset['vlTheme'] = theme;
     document.documentElement.lang = locale;
-  }, [theme, locale]);
+    if (palette === 'base') delete document.documentElement.dataset['vlPalette'];
+    else document.documentElement.dataset['vlPalette'] = palette;
+  }, [theme, locale, palette]);
   return (
     <VizProvider locale={locale}>
       <div className="sb-vl-root" data-vl-theme={theme}>
@@ -27,6 +29,7 @@ const withTheme: Decorator = (Story, context) => (
   <ThemeRoot
     theme={(context.globals['theme'] as string | undefined) ?? 'light'}
     locale={(context.globals['locale'] as string | undefined) ?? 'en'}
+    palette={(context.globals['palette'] as string | undefined) ?? 'base'}
   >
     <Story />
   </ThemeRoot>
@@ -47,6 +50,19 @@ const preview: Preview = {
         dynamicTitle: true,
       },
     },
+    palette: {
+      description: 'Categorical palette',
+      toolbar: {
+        title: 'Palette',
+        icon: 'paintbrush',
+        items: [
+          { value: 'base', title: 'Base' },
+          { value: 'plus', title: 'Plus' },
+          { value: 'okabe', title: 'Okabe–Ito' },
+        ],
+        dynamicTitle: true,
+      },
+    },
     locale: {
       description: 'Locale for number and date formatting',
       toolbar: {
@@ -60,7 +76,7 @@ const preview: Preview = {
       },
     },
   },
-  initialGlobals: { theme: 'light', locale: 'en' },
+  initialGlobals: { theme: 'light', locale: 'en', palette: 'base' },
   parameters: {
     layout: 'padded',
     controls: { matchers: { color: /(background|color)$/i, date: /Date$/i } },

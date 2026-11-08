@@ -68,6 +68,12 @@ export interface ChartTooltipProps {
   readonly prefer?: ChartTooltipInput['prefer'];
   /** Below this container width the tooltip docks above the plot (phones). Default 480. */
   readonly dockBelow?: number;
+  /**
+   * Where the bubble may go: `'container'` keeps it inside the chart; `'viewport'` lets it leave
+   * the chart while it stays on screen (above a column, say), so the chart's ancestors must not
+   * clip it. Default `'container'`.
+   */
+  readonly overflow?: 'container' | 'viewport';
   /** Pinned: stays after the pointer leaves, gets a close button, becomes interactive. */
   readonly pinned?: boolean;
   readonly onUnpin?: () => void;
@@ -75,6 +81,24 @@ export interface ChartTooltipProps {
   readonly className?: string;
   /** Accessible name; the content is announced politely when it changes. */
   readonly 'aria-label'?: string;
+}
+
+/** The beak keeps this far from the bubble's corners, px. */
+const BEAK_INSET = 14;
+/** Distance the bubble keeps from the viewport edges, px. */
+const VIEWPORT_MARGIN = 8;
+
+/** Room between the tooltip's positioning container and the viewport edges. */
+function viewportRoom(el: HTMLElement) {
+  const host = (el.offsetParent ?? el.parentElement)?.getBoundingClientRect();
+  if (!host) return { top: 0, right: 0, bottom: 0, left: 0 };
+  const room = (v: number) => Math.max(0, v - VIEWPORT_MARGIN);
+  return {
+    top: room(host.top),
+    right: room(window.innerWidth - host.right),
+    bottom: room(window.innerHeight - host.bottom),
+    left: room(host.left),
+  };
 }
 
 /**
@@ -88,6 +112,7 @@ export function ChartTooltip({
   bounds,
   prefer,
   dockBelow = 480,
+  overflow = 'container',
   pinned = false,
   onUnpin,
   children,
@@ -104,13 +129,19 @@ export function ChartTooltip({
   useIsomorphicLayoutEffect(() => {
     const el = ref.current;
     if (!el || !shown) return;
+    const size = { width: el.offsetWidth, height: el.offsetHeight };
+    const gap = Number.parseFloat(getComputedStyle(el).getPropertyValue('--vl-tooltip-gap'));
     const pos = placeChartTooltip({
       anchor: shown.anchor,
-      size: { width: el.offsetWidth, height: el.offsetHeight },
+      size,
       bounds,
       prefer,
       dockBelow,
+      ...(Number.isFinite(gap) ? { gap } : {}),
+      ...(overflow === 'viewport' ? { room: viewportRoom(el) } : {}),
     });
+    const beak = Math.min(Math.max(shown.anchor.x - pos.x, BEAK_INSET), size.width - BEAK_INSET);
+    el.style.setProperty('--vl-tooltip-beak-x', `${Math.round(beak)}px`);
     el.style.setProperty('--vl-tooltip-x', `${Math.round(pos.x)}px`);
     el.style.setProperty('--vl-tooltip-y', `${Math.round(pos.y)}px`);
     el.dataset['side'] = pos.side;
@@ -135,6 +166,7 @@ export function ChartTooltip({
       aria-live={pinned ? undefined : 'polite'}
       className={cx('vl-tooltip', open && 'vl-tooltip--open', settled && 'vl-tooltip--settled', pinned && 'vl-tooltip--pinned', className)}
     >
+      <span className="vl-tooltip__beak" aria-hidden="true" />
       {shown.children}
       {pinned && onUnpin ? (
         <button type="button" className="vl-tooltip__close" aria-label={locale.strings.unpin} onClick={onUnpin}>

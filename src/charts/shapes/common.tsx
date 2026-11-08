@@ -92,3 +92,10 @@ export function markState(active: number | null, index: number): 'on' | 'dim' | 
   if (active === null || active < 0) return undefined;
   return active === index ? 'on' : 'dim';
 }
+
+/** The element matching `selector` under a screen point, looked up in the root of `node` (document or shadow root). */
+export function elementAt(node: Element | null, x: number, y: number, selector: string): HTMLElement | null {
+  const root = node?.getRootNode() as Document | ShadowRoot | undefined;
+  if (typeof root?.elementFromPoint !== 'function') return null;
+  return root.elementFromPoint(x, y)?.closest<HTMLElement>(selector) ?? null;
+}

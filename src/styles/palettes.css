@@ -1,0 +1,67 @@
+/*
+ * Alternative categorical palettes: `data-vl-palette="plus"` or `"okabe"` on the theme root or
+ * any ancestor. They replace --vl-cat-1 … --vl-cat-6 and follow the light/dark theme.
+ * Load after tokens.css.
+ */
+/* Brighter blue and lime in place of the deep blue and green. */
+[data-vl-palette='plus'],
+[data-vl-palette='plus'] [data-vl-theme='light'] {
+  --vl-cat-1: #764be5;
+  --vl-cat-2: #a86400;
+  --vl-cat-3: #007f73;
+  --vl-cat-4: #c41f4a;
+  --vl-cat-5: #0a8fd8;
+  --vl-cat-6: #5c7d00;
+}
+[data-vl-palette='plus'][data-vl-theme='dark'],
+[data-vl-palette='plus'] [data-vl-theme='dark'],
+[data-vl-theme='dark'] [data-vl-palette='plus'] {
+  --vl-cat-1: #8968f4;
+  --vl-cat-2: #c8830b;
+  --vl-cat-3: #25a897;
+  --vl-cat-4: #e84461;
+  --vl-cat-5: #7fd4ff;
+  --vl-cat-6: #b6e36b;
+}
+/* Okabe–Ito colours, the safest set for colour-blind readers. */
+[data-vl-palette='okabe'],
+[data-vl-palette='okabe'] [data-vl-theme='light'] {
+  --vl-cat-1: #0072b2;
+  --vl-cat-2: #b06f00;
+  --vl-cat-3: #007a5a;
+  --vl-cat-4: #b0508a;
+  --vl-cat-5: #3d8fc4;
+  --vl-cat-6: #c24f00;
+}
+[data-vl-palette='okabe'][data-vl-theme='dark'],
+[data-vl-palette='okabe'] [data-vl-theme='dark'],
+[data-vl-theme='dark'] [data-vl-palette='okabe'] {
+  --vl-cat-1: #56b4e9;
+  --vl-cat-2: #e69f00;
+  --vl-cat-3: #009e73;
+  --vl-cat-4: #cc79a7;
+  --vl-cat-5: #f0e442;
+  --vl-cat-6: #d55e00;
+}
+@media (prefers-color-scheme: dark) {
+  [data-vl-palette='plus'][data-vl-theme='auto'],
+  [data-vl-palette='plus'] [data-vl-theme='auto'],
+  [data-vl-theme='auto'] [data-vl-palette='plus'] {
+    --vl-cat-1: #8968f4;
+    --vl-cat-2: #c8830b;
+    --vl-cat-3: #25a897;
+    --vl-cat-4: #e84461;
+    --vl-cat-5: #7fd4ff;
+    --vl-cat-6: #b6e36b;
+  }
+  [data-vl-palette='okabe'][data-vl-theme='auto'],
+  [data-vl-palette='okabe'] [data-vl-theme='auto'],
+  [data-vl-theme='auto'] [data-vl-palette='okabe'] {
+    --vl-cat-1: #56b4e9;
+    --vl-cat-2: #e69f00;
+    --vl-cat-3: #009e73;
+    --vl-cat-4: #cc79a7;
+    --vl-cat-5: #f0e442;
+    --vl-cat-6: #d55e00;
+  }
+}

@@ -85,12 +85,26 @@ export const NoAccess: Story = { args: { state: { status: 'no-access' } } };
 export const Partial: Story = { args: { state: { status: 'partial', reason: 'The last day is still being collected.' } } };
 
 export const Phone: Story = {
-  parameters: { viewport: { defaultViewport: 'phone' } },
+  parameters: { layout: 'fullscreen', viewport: { defaultViewport: 'phone' } },
   decorators: [
     (Story) => (
       <div style={{ maxWidth: 358 }}>
         <Story />
       </div>
+    ),
+  ],
+};
+
+export const PhoneRussian: Story = {
+  ...Phone,
+  args: { title: 'Когда покупают билеты' },
+  decorators: [
+    (Story) => (
+      <VizProvider locale="ru">
+        <div style={{ maxWidth: 358 }}>
+          <Story />
+        </div>
+      </VizProvider>
     ),
   ],
 };

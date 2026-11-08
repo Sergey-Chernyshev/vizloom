@@ -69,6 +69,8 @@ export interface Locale {
   readonly span: readonly [day: string, hour: string, minute: string];
   /** Day-month order in short dates: `Oct 7` vs `7 окт`. */
   readonly dayFirst: boolean;
+  /** Space between a number and the percent sign: `12 %` instead of `12%`. Off by default. */
+  readonly percentSpace?: boolean;
   readonly hour12: boolean;
   readonly strings: LocaleStrings;
 }

@@ -1,5 +1,5 @@
 /* Shapes: donut / pie / semi, funnel, heatmap. */
-export { DEFAULT_VISIBLE_ROWS, DonutChart, type DonutChartProps } from './donut-chart';
+export { DEFAULT_DONUT_LABELS, DEFAULT_VISIBLE_ROWS, DonutChart, type DonutChartProps, type DonutLabels, donutLabels } from './donut-chart';
 export {
   DONUT_VARIANT,
   donutRows,
@@ -18,6 +18,7 @@ export {
   type FunnelChartProps,
   type FunnelLabels,
   type FunnelVariant,
+  funnelLabels,
 } from './funnel-chart';
 export {
   ALPHA_BASE,
@@ -28,5 +29,6 @@ export {
   HeatmapChart,
   type HeatmapChartProps,
   type HeatmapLabels,
+  heatmapLabels,
   pickHourStep,
 } from './heatmap-chart';

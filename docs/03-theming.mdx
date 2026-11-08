@@ -39,6 +39,38 @@ when a theme attribute changes.
 }
 ```
 
+## Built-in alternative palettes
+
+`data-vl-palette` on the theme root (or any ancestor) swaps series colours 1–6 and follows the
+light/dark theme:
+
+| Value   | Colours                                                                 |
+| ------- | ----------------------------------------------------------------------- |
+| `plus`  | the base set with a brighter blue and a lime in slots 5 and 6           |
+| `okabe` | Okabe–Ito: the safest set for the most common kinds of colour blindness |
+
+```html
+<div data-vl-theme="dark" data-vl-palette="okabe">…</div>
+```
+
+## Tooltip tokens
+
+Every chart's tooltip reads optional tokens, so one block restyles them all (unset tokens keep
+the defaults): `--vl-tooltip-bg`, `-text`, `-label`, `-muted`, `-divider`, `-shadow`, `-radius`,
+`-padding`, `-font-size`, `-line-height`, `-min-width`, `-title-gap`, `-title-line-height`,
+`-row-gap`, `-row-height`, `-value-weight`, `-gap` (distance from the anchor, px) and
+`--vl-tooltip-beak: block` for a beak on bubbles above or below the anchor.
+
+```css
+:root {
+  --vl-tooltip-bg: #1f2430;
+  --vl-tooltip-text: #fafaf7;
+  --vl-tooltip-label: color-mix(in oklab, #fafaf7 70%, transparent);
+  --vl-tooltip-shadow: none;
+  --vl-tooltip-beak: block;
+}
+```
+
 ## Token groups
 
 | Group    | Variables                                                                                            |

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useEffect, useState } from 'react';
 
+import { VizProvider } from '../../core';
 import { FunnelChart, type FunnelChartProps } from './funnel-chart';
 
 const steps = [
@@ -82,12 +83,34 @@ export const NoAccess: Story = { args: { state: { status: 'no-access' } } };
 export const Partial: Story = { args: { state: { status: 'partial', reason: 'Checkout events are still being collected.' } } };
 
 export const Phone: Story = {
-  parameters: { viewport: { defaultViewport: 'phone' } },
+  parameters: { layout: 'fullscreen', viewport: { defaultViewport: 'phone' } },
   decorators: [
     (Story) => (
       <div style={{ maxWidth: 358 }}>
         <Story />
       </div>
+    ),
+  ],
+};
+export const PhoneRussian: Story = {
+  ...Phone,
+  args: {
+    title: 'Воронка покупки билета',
+    steps: [
+      { id: 'visit', label: 'Страница события', value: 10641 },
+      { id: 'select', label: 'Выбор билетов', value: 3090 },
+      { id: 'cart', label: 'Корзина', value: 1710 },
+      { id: 'checkout', label: 'Оформление', value: 940 },
+      { id: 'paid', label: 'Оплата', value: 499 },
+    ],
+  },
+  decorators: [
+    (Story) => (
+      <VizProvider locale="ru">
+        <div style={{ maxWidth: 358 }}>
+          <Story />
+        </div>
+      </VizProvider>
     ),
   ],
 };

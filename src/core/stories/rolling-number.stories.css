@@ -1,0 +1,7 @@
+/* Story only. */
+.sb-rolling {
+  display: grid;
+  gap: 16px;
+  font: 600 28px var(--vl-font-family);
+  color: var(--vl-text);
+}

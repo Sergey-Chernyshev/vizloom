@@ -27,6 +27,7 @@ export interface GaugeProps {
   readonly sublabel?: ReactNode;
   /** `semi` (180°, default) or `arc` (270°). */
   readonly shape?: 'semi' | 'arc';
+  /** Width of the drawing, px. Default 200 (`semi`) or 220 (`arc`). */
   readonly size?: number;
   readonly thickness?: number;
   readonly animate?: boolean;
@@ -58,7 +59,7 @@ export function Gauge({
   label,
   sublabel,
   shape = 'semi',
-  size = 200,
+  size: sizeProp,
   thickness = 14,
   animate = true,
   className,
@@ -69,9 +70,12 @@ export function Gauge({
   const ratio = (v: number) => Math.max(0, Math.min(1, (v - min) / span));
   const sweep = shape === 'semi' ? Math.PI : TAU * 0.75;
   const start = shape === 'semi' ? Math.PI : Math.PI * 0.75;
-  const r = (size - thickness) / 2;
+  const size = sizeProp ?? (shape === 'semi' ? 200 : 220);
   const c = size / 2;
-  const height = shape === 'semi' ? c + thickness / 2 + 2 : size;
+  // The 270° dial leaves room for the target tick and the captions under the arc.
+  const r = shape === 'semi' ? (size - thickness) / 2 : c - thickness / 2 - 17;
+  const height = shape === 'semi' ? c + thickness / 2 + 2 : size - 24;
+  const tick = shape === 'semi' ? thickness / 2 + 2 : 13;
   const tone = thresholds?.find((t) => value <= t.to)?.tone ?? 'accent';
   const fmt = formatValue ?? ((v: number) => (unit ? format.value(v, unit, true) : format.number(v)));
   const pct = ratio(value) * 100;
@@ -106,10 +110,10 @@ export function Gauge({
         {targetAngle !== null ? (
           <line
             className="vl-gauge__target"
-            x1={c + (r - thickness / 2 - 2) * Math.cos(targetAngle)}
-            y1={c + (r - thickness / 2 - 2) * Math.sin(targetAngle)}
-            x2={c + (r + thickness / 2 + 2) * Math.cos(targetAngle)}
-            y2={c + (r + thickness / 2 + 2) * Math.sin(targetAngle)}
+            x1={c + (r - tick) * Math.cos(targetAngle)}
+            y1={c + (r - tick) * Math.sin(targetAngle)}
+            x2={c + (r + tick) * Math.cos(targetAngle)}
+            y2={c + (r + tick) * Math.sin(targetAngle)}
           >
             {targetLabel ? <title>{targetLabel}</title> : null}
           </line>

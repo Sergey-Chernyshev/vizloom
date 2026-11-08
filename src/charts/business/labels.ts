@@ -285,3 +285,98 @@ const SELLOUT_RU: SelloutLabels = {
 };
 
 export const selloutLabels = (locale: Locale): SelloutLabels => (isRu(locale) ? SELLOUT_RU : SELLOUT_EN);
+
+/** Words of the daily rate chart. Built from the locale; override any with `labels`. */
+export interface RateColumnsLabels {
+  /** Caption under the headline: the average over the visible days. */
+  readonly average: (from: string, to: string) => string;
+  readonly rate: string;
+  readonly base: string;
+  readonly count: string;
+  readonly legendRate: string;
+  readonly legendBase: string;
+  readonly legendEvents: string;
+  /** Hint for a mouse and for a finger. */
+  readonly hintFine: string;
+  readonly hintTouch: string;
+  /** Name of the navigator window. */
+  readonly window: string;
+}
+
+const RATE_COLUMNS_EN: RateColumnsLabels = {
+  average: (from, to) => `average conversion · ${from} — ${to}`,
+  rate: 'Conversion',
+  base: 'Visitors',
+  count: 'Bought',
+  legendRate: 'Conversion',
+  legendBase: 'Visitors',
+  legendEvents: 'Events',
+  hintFine: 'Select days with the mouse to zoom in',
+  hintTouch: 'Drag the chart with a finger, pinch to zoom',
+  window: 'Period on the chart',
+};
+
+const RATE_COLUMNS_RU: RateColumnsLabels = {
+  average: (from, to) => `средняя конверсия · ${from} — ${to}`,
+  rate: 'Конверсия',
+  base: 'Посетителей',
+  count: 'Купили',
+  legendRate: 'Конверсия',
+  legendBase: 'Посетители',
+  legendEvents: 'События',
+  hintFine: 'Выделите дни мышью, чтобы приблизить',
+  hintTouch: 'Двигайте график пальцем, сведите два пальца — приблизить',
+  window: 'Период на графике',
+};
+
+export const rateColumnsLabels = (locale: Locale): RateColumnsLabels => (isRu(locale) ? RATE_COLUMNS_RU : RATE_COLUMNS_EN);
+
+/** Words of the countdown chart. Built from the locale; override any with `labels`. */
+export interface CountdownLabels {
+  /** Name of the default metric (the count of parts). */
+  readonly count: string;
+  /** Tooltip row with the day's count. */
+  readonly total: string;
+  /** Axis caption under the columns. */
+  readonly axis: string;
+  readonly reset: string;
+  readonly hintFine: string;
+  readonly hintTouch: string;
+  /** Name of the metric switch. */
+  readonly metric: string;
+  /** Tooltip title of a day by days left. */
+  readonly dayTitle: (daysLeft: number) => string;
+}
+
+const COUNTDOWN_EN: CountdownLabels = {
+  count: 'requests',
+  total: 'Requests',
+  axis: 'days before the event',
+  reset: 'Whole period',
+  hintFine: 'select days with the mouse to zoom in',
+  hintTouch: 'pinch to zoom in',
+  metric: 'Measure',
+  dayTitle: (d) => {
+    if (d === 0) return 'On the day of the event';
+    return d === 1 ? '1 day before the event' : `${d} days before the event`;
+  },
+};
+
+function ruDays(d: number): string {
+  if (d % 10 === 1 && d % 100 !== 11) return 'день';
+  if (d % 10 >= 2 && d % 10 <= 4 && (d % 100 < 10 || d % 100 >= 20)) return 'дня';
+  return 'дней';
+}
+
+const COUNTDOWN_RU: CountdownLabels = {
+  count: 'заявок',
+  total: 'Заявок',
+  axis: 'дней до мероприятия',
+  reset: 'Весь период',
+  hintFine: 'выделите дни мышью, чтобы приблизить',
+  hintTouch: 'сведите два пальца, чтобы приблизить',
+  metric: 'Показатель',
+  dayTitle: (d) => (d === 0 ? 'В день мероприятия' : `За ${d} ${ruDays(d)} до мероприятия`),
+};
+
+export const countdownLabels = (locale: Locale): CountdownLabels => (isRu(locale) ? COUNTDOWN_RU : COUNTDOWN_EN);

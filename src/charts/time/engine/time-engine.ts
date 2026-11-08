@@ -355,7 +355,7 @@ export class TimeEngine {
     this.themeObserver = typeof MutationObserver === 'function' ? new MutationObserver(() => this.readTheme()) : null;
     this.themeObserver?.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class', 'data-vl-theme', 'style'],
+      attributeFilter: ['class', 'data-vl-theme', 'data-vl-palette', 'style'],
       subtree: true,
     });
     this.bind();

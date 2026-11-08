@@ -57,6 +57,8 @@ describe('format', () => {
     expect(pluralize(1, ['ticket', 'tickets'])).toBe('ticket');
     expect(formatDelta(24, en)).toBe('↑ +24%');
     expect(formatDelta(-42.4, en)).toBe('↓ −42%');
+    expect(formatValue(1.7, { kind: 'percent' }, { locale: ru })).toBe('1,7%');
+    expect(formatValue(1.7, { kind: 'percent' }, { locale: defineLocale(ru, { percentSpace: true }) })).toBe('1,7\u00a0%');
     expect(percentChange(120, 100)).toBe(20);
     expect(Number.isNaN(percentChange(1, 0))).toBe(true);
   });
@@ -163,6 +165,20 @@ describe('placement', () => {
       dockBelow: 480,
     });
     expect(dock.side).toBe('dock');
+  });
+  it('lets a top tooltip rise into the room outside the chart and clears a tall anchor below', () => {
+    const input = {
+      anchor: { x: 300, y: 20, width: 20, height: 200 },
+      size: { width: 160, height: 120 },
+      bounds: { width: 600, height: 400 },
+      prefer: 'top' as const,
+      gap: 8,
+    };
+    const inside = placeChartTooltip(input);
+    expect(inside.side).toBe('bottom');
+    expect(inside.y).toBe(228);
+    const above = placeChartTooltip({ ...input, room: { top: 400, right: 0, bottom: 0, left: 0 } });
+    expect(above).toEqual({ x: 220, y: -108, side: 'top' });
   });
   it('computes hint placement inside the viewport', () => {
     const p = computePlacement({

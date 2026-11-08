@@ -1,8 +1,46 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fixedOffsetZone, VizProvider } from '../../core';
 import { cellAlpha, HeatmapChart, pickHourStep } from './heatmap-chart';
+
+/** Makes the media query of `useIsPhone` match for the test (a touch phone). */
+function emulatePhone(): () => void {
+  const original = window.matchMedia;
+  window.matchMedia = ((query: string) => ({
+    matches: true,
+    media: query,
+    onchange: null,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+    addListener: () => undefined,
+    removeListener: () => undefined,
+    dispatchEvent: () => false,
+  })) as typeof window.matchMedia;
+  return () => {
+    window.matchMedia = original;
+  };
+}
+
+/** Hold a finger on `area`, then drag it over `targets` one by one; returns the release. */
+function holdAndDrag(area: Element, targets: readonly Element[]): () => void {
+  const at = document as unknown as { elementFromPoint: (x: number, y: number) => Element | null };
+  const original = at.elementFromPoint;
+  let current: Element | null = targets[0] ?? null;
+  at.elementFromPoint = () => current;
+  fireEvent.touchStart(area, { touches: [{ clientX: 10, clientY: 10 }] });
+  act(() => {
+    vi.advanceTimersByTime(300);
+  });
+  targets.forEach((target, i) => {
+    current = target;
+    fireEvent.touchMove(area, { touches: [{ clientX: 10 + i, clientY: 10 }] });
+  });
+  return () => {
+    fireEvent.touchEnd(area);
+    at.elementFromPoint = original;
+  };
+}
 
 /** Tuesday-heavy grid: Mon (day 0) quiet, Tue 20:00 is the peak. */
 function makeGrid(): number[][] {
@@ -35,7 +73,7 @@ describe('HeatmapChart', () => {
   it('draws 7 rows and the peak headline', () => {
     const { container } = render(<HeatmapChart title="Sales by hour" grid={makeGrid()} animate={false} />);
     expect(container.querySelectorAll('[role="row"]')).toHaveLength(7);
-    expect(container.querySelector('.vl-heatmap__peak')?.textContent).toBe('Peak: Tue 20:00 · 40');
+    expect(container.querySelector('.vl-heatmap__peak')?.textContent).toBe('Tue 20:00');
     expect(container.querySelector('.vl-heatmap__best')?.textContent).toContain('Tuesday');
   });
 
@@ -89,14 +127,14 @@ describe('HeatmapChart', () => {
     values[22] = 9;
     const hourly = { start, length: 48, values: { sales: values } };
     const utc = render(<HeatmapChart title="UTC" hourly={hourly} animate={false} />);
-    expect(utc.container.querySelector('.vl-heatmap__peak')?.textContent).toBe('Peak: Mon 22:00 · 9');
+    expect(utc.container.querySelector('.vl-heatmap__peak')?.textContent).toBe('Mon 22:00');
     utc.unmount();
     const msk = render(
       <VizProvider zone={fixedOffsetZone(3)}>
         <HeatmapChart title="MSK" hourly={hourly} animate={false} />
       </VizProvider>,
     );
-    expect(msk.container.querySelector('.vl-heatmap__peak')?.textContent).toBe('Peak: Tue 01:00 · 9');
+    expect(msk.container.querySelector('.vl-heatmap__peak')?.textContent).toBe('Tue 01:00');
   });
 
   it('onSelect receives the cell index', () => {
@@ -115,5 +153,99 @@ describe('HeatmapChart', () => {
     loading.unmount();
     render(<HeatmapChart title="Err" grid={makeGrid()} state={{ status: 'error' }} />);
     expect(screen.getByRole('alert')).toBeInTheDocument();
+  });
+});
+
+describe('HeatmapChart on a phone', () => {
+  let restore: () => void;
+  beforeEach(() => {
+    restore = emulatePhone();
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    restore();
+  });
+
+  it('a tap opens the sheet with the verdict, the strip and the stats of the slot', () => {
+    const onSelect = vi.fn();
+    const { container } = render(<HeatmapChart title="Sales by hour" grid={makeGrid()} animate={false} onSelect={onSelect} />);
+    fireEvent.click(container.querySelector('[data-cell="1:20"]') as Element);
+    const sheet = screen.getByRole('dialog');
+    expect(sheet).toHaveTextContent('Tue, 20:00–21:00');
+    expect(sheet).toHaveTextContent('Peak of the week');
+    expect(sheet).toHaveTextContent('from 20:00 to 21:00');
+    expect(sheet).toHaveTextContent('Share of the week');
+    expect(sheet.querySelector('.vl-timeline')).not.toBeNull();
+    expect(sheet.querySelectorAll('.vl-timeline__item')).toHaveLength(7 * 24 * 3);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(container.querySelector('[data-cell="1:20"]')).toHaveAttribute('data-active');
+    expect(onSelect).toHaveBeenCalledWith(1 * 24 + 20, null);
+  });
+
+  it('a quiet and a missing slot get their own verdicts', () => {
+    const { container } = render(<HeatmapChart title="Sales by hour" grid={makeGrid()} animate={false} />);
+    fireEvent.click(container.querySelector('[data-cell="3:4"]') as Element);
+    expect(screen.getByRole('dialog')).toHaveTextContent('No data for this slot');
+    fireEvent.click(container.querySelector('[data-cell="5:10"]') as Element);
+    expect(screen.getByRole('dialog')).toHaveTextContent('No purchases');
+  });
+
+  it('scrubbing the strip moves the sheet to the neighbouring slot', () => {
+    const { container } = render(<HeatmapChart title="Sales by hour" grid={makeGrid()} animate={false} />);
+    fireEvent.click(container.querySelector('[data-cell="1:20"]') as Element);
+    const track = screen.getByRole('dialog').querySelector('.vl-timeline__track') as HTMLElement;
+    // Loop mode: the middle copy starts at item 168; item 1:21 is 168 + 24 + 21.
+    track.scrollLeft = (168 + 24 + 21) * 22;
+    fireEvent.scroll(track);
+    expect(screen.getByRole('dialog')).toHaveTextContent('Tue, 21:00–22:00');
+    expect(container.querySelector('[data-cell="1:21"]')).toHaveAttribute('data-active');
+  });
+
+  it('hold and drag reads the cells, the tooltip follows the finger', () => {
+    const { container } = render(<HeatmapChart title="Sales by hour" grid={makeGrid()} animate={false} />);
+    const area = container.querySelector('.vl-heatmap__grid') as Element;
+    const release = holdAndDrag(area, [
+      container.querySelector('[data-cell="0:0"]') as Element,
+      container.querySelector('[data-cell="1:19"]') as Element,
+    ]);
+    expect(container.querySelector('[data-cell="1:19"]')).toHaveAttribute('data-active');
+    expect(screen.getByRole('tooltip')).toHaveTextContent('Tuesday');
+    release();
+    expect(container.querySelector('[data-cell="1:19"]')).not.toHaveAttribute('data-active');
+    fireEvent.click(container.querySelector('[data-cell="1:19"]') as Element);
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+});
+
+let restoreMedia: () => void;
+
+describe('HeatmapChart words', () => {
+  it('speaks Russian with the provider locale and `labels` still override', () => {
+    const { container } = render(
+      <VizProvider locale="ru">
+        <HeatmapChart title="Продажи по часам" grid={makeGrid()} animate={false} labels={{ few: 'меньше' }} />
+      </VizProvider>,
+    );
+    expect(container.querySelector('.vl-heatmap__peak')?.textContent).toBe('Вт 20:00');
+    expect(container.querySelector('.vl-heatmap__headline')?.textContent).toContain('пик · 40');
+    expect(container.querySelector('.vl-heatmap__best')?.textContent).toContain('Сильнее всего вторник');
+    expect(container.querySelector('.vl-heatmap__scale')?.textContent).toBe(`меньше0${40}много`);
+  });
+
+  it('the Russian sheet uses the words of the mock-up', () => {
+    restoreMedia = emulatePhone();
+    const { container } = render(
+      <VizProvider locale="ru">
+        <HeatmapChart title="Продажи по часам" grid={makeGrid()} animate={false} />
+      </VizProvider>,
+    );
+    fireEvent.click(container.querySelector('[data-cell="1:20"]') as Element);
+    const sheet = screen.getByRole('dialog');
+    expect(sheet).toHaveTextContent('Вт, 20:00–21:00');
+    expect(sheet).toHaveTextContent('Пик недели');
+    expect(sheet).toHaveTextContent('с 20:00 до 21:00');
+    expect(sheet).toHaveTextContent('Листайте шкалу');
+    restoreMedia();
   });
 });

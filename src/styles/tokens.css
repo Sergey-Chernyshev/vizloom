@@ -47,7 +47,7 @@
   --vl-cat-6: #009b44;
   --vl-cat-7: #b04ac2;
   --vl-cat-8: #5f6b7a;
-  --vl-cat-other: #9a9aa4;
+  --vl-cat-other: #8b8b95;
   /* Comparison series (other events, previous period). */
   --vl-compare-1: #8b8b97;
   --vl-compare-2: #b28a4a;
@@ -120,7 +120,7 @@
   --vl-future: rgba(255, 255, 255, 0.03);
   --vl-zone: rgba(255, 255, 255, 0.05);
   --vl-cat-1: #8968f4;
-  --vl-cat-2: #d08f1e;
+  --vl-cat-2: #c8830b;
   --vl-cat-3: #25a897;
   --vl-cat-4: #e84461;
   --vl-cat-5: #2389e2;
@@ -172,7 +172,7 @@
     --vl-future: rgba(255, 255, 255, 0.03);
     --vl-zone: rgba(255, 255, 255, 0.05);
     --vl-cat-1: #8968f4;
-    --vl-cat-2: #d08f1e;
+    --vl-cat-2: #c8830b;
     --vl-cat-3: #25a897;
     --vl-cat-4: #e84461;
     --vl-cat-5: #2389e2;

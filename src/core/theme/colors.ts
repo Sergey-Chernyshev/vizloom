@@ -64,7 +64,7 @@ export function readThemeColors(element: Element | null): ThemeColors {
     warning: read('--vl-warning', FALLBACK.warning),
     crosshair: read('--vl-crosshair', FALLBACK.crosshair),
     categorical,
-    other: read('--vl-cat-other', '#9a9aa4'),
+    other: read('--vl-cat-other', '#8b8b95'),
     compare: [1, 2, 3, 4].map((i) => read(`--vl-compare-${i}`, '#8a8a94')),
     sequential: [read('--vl-seq-from', '#f1eefe'), read('--vl-seq-to', '#4b2bd6')],
     diverging: [read('--vl-div-neg', '#d0324e'), read('--vl-div-mid', '#f2f2f5'), read('--vl-div-pos', '#118a4e')],

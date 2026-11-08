@@ -1,0 +1,24 @@
+.sb-veil {
+  max-inline-size: 420px;
+}
+.sb-veil__dust {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(currentColor 0.6px, transparent 0.8px);
+  background-size: 5px 5px;
+  opacity: 0.5;
+}
+.sb-veil__rows {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 24px;
+}
+.sb-veil__rows div {
+  display: flex;
+  justify-content: space-between;
+}
+.sb-veil__rows dd {
+  margin: 0;
+  font-weight: 600;
+}

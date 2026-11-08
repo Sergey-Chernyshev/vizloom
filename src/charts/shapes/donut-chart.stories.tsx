@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useEffect, useState } from 'react';
 
-import { currencyUnit, type Datum } from '../../core';
+import { currencyUnit, type Datum, VizProvider } from '../../core';
 import { DonutChart, type DonutChartProps } from './donut-chart';
 
 const channels: Datum[] = [
@@ -116,12 +116,33 @@ export const CustomTooltip: Story = {
 };
 
 export const Phone: Story = {
-  parameters: { viewport: { defaultViewport: 'phone' } },
+  parameters: { layout: 'fullscreen', viewport: { defaultViewport: 'phone' } },
   decorators: [
     (Story) => (
       <div style={{ maxWidth: 358 }}>
         <Story />
       </div>
+    ),
+  ],
+};
+export const PhoneRussian: Story = {
+  ...Phone,
+  args: {
+    title: 'Билеты по каналам',
+    data: [
+      { key: 'web', label: 'Сайт', value: 5240 },
+      { key: 'app', label: 'Приложение', value: 3180 },
+      { key: 'partners', label: 'Партнёры', value: 1460 },
+      { key: 'box', label: 'Касса', value: 820 },
+    ],
+  },
+  decorators: [
+    (Story) => (
+      <VizProvider locale="ru">
+        <div style={{ maxWidth: 358 }}>
+          <Story />
+        </div>
+      </VizProvider>
     ),
   ],
 };

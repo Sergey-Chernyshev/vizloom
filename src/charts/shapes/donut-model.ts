@@ -134,9 +134,9 @@ export interface Geometry {
 
 const BOX = 200;
 export const GEOMETRY: Readonly<Record<DonutVariant, Geometry>> = {
-  ring: { cx: BOX / 2, cy: BOX / 2, ro: 90, ri: 66, corner: 6, width: BOX, height: BOX },
+  ring: { cx: BOX / 2, cy: BOX / 2, ro: 88, ri: 68, corner: 6, width: BOX, height: BOX },
   pie: { cx: BOX / 2, cy: BOX / 2, ro: 92, ri: 0, corner: 0, width: BOX, height: BOX },
-  semi: { cx: BOX / 2, cy: 100, ro: 92, ri: 66, corner: 6, width: BOX, height: 108 },
+  semi: { cx: BOX / 2, cy: 100, ro: 83.5, ri: 72.5, corner: 4, width: BOX, height: 108 },
 };
 
 /** Point at `deg` (0° up, clockwise) and radius `r`. */
@@ -149,6 +149,12 @@ const pt = (g: Geometry, deg: number, r: number): string => {
   const p = polar(g, deg, r);
   return `${p.x.toFixed(2)} ${p.y.toFixed(2)}`;
 };
+
+/** Centre line of the half-ring track, from the left end to the right one. */
+export function trackPath(g: Geometry): string {
+  const r = (g.ro + g.ri) / 2;
+  return `M ${pt(g, -90, r)} A ${r} ${r} 0 0 1 ${pt(g, 90, r)}`;
+}
 
 /**
  * SVG path of a slice from `a0` to `a1` degrees. Ring slices have rounded corners: at each corner an

@@ -79,11 +79,14 @@ export function BarList<Key extends string>({
                 ref={(n) => {
                   if (!n) return;
                   n.style.setProperty('--vl-bar-w', `${(ratio * 100).toFixed(2)}%`);
-                  if (item.color) n.style.setProperty('--vl-bar-color', item.color);
+                  if (item.color) {
+                    n.style.setProperty('--vl-bar-color', item.color);
+                    n.style.setProperty('--vl-bar-mix', '14%');
+                  }
                 }}
               />
+              {item.icon ? <span className="vl-bar-list__icon">{item.icon}</span> : null}
               <span className="vl-bar-list__text">
-                {item.icon ? <span className="vl-bar-list__icon">{item.icon}</span> : null}
                 <span className="vl-bar-list__label" title={item.label}>
                   {item.label}
                 </span>

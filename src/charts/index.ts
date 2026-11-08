@@ -6,3 +6,5 @@ export * from './time';
 export * from './shapes';
 export * from './business';
 export * from './category';
+export * from './shared/timeline-strip';
+export * from './shared/sheet-summary';

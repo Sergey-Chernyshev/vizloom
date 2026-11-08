@@ -32,7 +32,9 @@ export * from './ui/legend';
 export * from './ui/tooltip';
 export * from './ui/delta';
 export * from './ui/live-number';
+export * from './ui/rolling-number';
 export * from './ui/state';
+export * from './ui/veil';
 export * from './ui/data-table-fallback';
 
 export * from './contracts/state';

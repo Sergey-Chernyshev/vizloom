@@ -1,7 +1,46 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { VizProvider } from '../../core';
 import { DonutChart } from './donut-chart';
+
+/** Makes the media query of `useIsPhone` match for the test (a touch phone). */
+function emulatePhone(): () => void {
+  const original = window.matchMedia;
+  window.matchMedia = ((query: string) => ({
+    matches: true,
+    media: query,
+    onchange: null,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+    addListener: () => undefined,
+    removeListener: () => undefined,
+    dispatchEvent: () => false,
+  })) as typeof window.matchMedia;
+  return () => {
+    window.matchMedia = original;
+  };
+}
+
+/** Hold a finger on `area`, then drag it over `targets` one by one; returns the release. */
+function holdAndDrag(area: Element, targets: readonly Element[]): () => void {
+  const at = document as unknown as { elementFromPoint: (x: number, y: number) => Element | null };
+  const original = at.elementFromPoint;
+  let current: Element | null = targets[0] ?? null;
+  at.elementFromPoint = () => current;
+  fireEvent.touchStart(area, { touches: [{ clientX: 10, clientY: 10 }] });
+  act(() => {
+    vi.advanceTimersByTime(300);
+  });
+  targets.forEach((target, i) => {
+    current = target;
+    fireEvent.touchMove(area, { touches: [{ clientX: 10 + i, clientY: 10 }] });
+  });
+  return () => {
+    fireEvent.touchEnd(area);
+    at.elementFromPoint = original;
+  };
+}
 
 const data = [
   { key: 'web', label: 'Web', value: 600 },
@@ -92,5 +131,74 @@ describe('DonutChart', () => {
     const error = render(<DonutChart title="Err" data={data} state={{ status: 'error' }} />);
     expect(screen.getByRole('alert')).toBeInTheDocument();
     error.unmount();
+  });
+});
+
+describe('DonutChart on a phone', () => {
+  let restore: () => void;
+  beforeEach(() => {
+    restore = emulatePhone();
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    restore();
+  });
+
+  it('a tap on a slice opens the sheet with the amount and the share', () => {
+    const onSelect = vi.fn();
+    const { container } = render(<DonutChart title="Sales" data={data} animate={false} onSelect={onSelect} />);
+    fireEvent.click(container.querySelector('[data-slice="app"]') as Element);
+    const sheet = screen.getByRole('dialog');
+    expect(sheet).toHaveTextContent('App');
+    expect(sheet).toHaveTextContent('Amount');
+    expect(sheet).toHaveTextContent('300');
+    expect(sheet).toHaveTextContent('of 1,000');
+    expect(sheet).toHaveTextContent('30%');
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(onSelect).toHaveBeenCalledWith(1, null);
+  });
+
+  it('a tap on a legend row opens the sheet too, and the chips switch the row', () => {
+    const { container } = render(<DonutChart title="Sales" data={data} animate={false} />);
+    fireEvent.click(container.querySelectorAll('.vl-donut__row')[2] as Element);
+    expect(screen.getByRole('dialog')).toHaveTextContent('Box office');
+    fireEvent.click(screen.getByRole('tab', { name: 'Web' }));
+    // The page slides out before the next row arrives.
+    act(() => {
+      vi.advanceTimersByTime(400);
+    });
+    expect(screen.getByRole('dialog')).toHaveTextContent('60%');
+  });
+
+  it('hold and drag moves the centre from slice to slice, and the lifted finger does not tap', () => {
+    const { container } = render(<DonutChart title="Sales" data={data} animate={false} />);
+    const area = container.querySelector('.vl-donut__body') as Element;
+    const release = holdAndDrag(area, [
+      container.querySelector('[data-slice="web"]') as Element,
+      container.querySelector('[data-slice="box"]') as Element,
+    ]);
+    expect(container.querySelector('.vl-donut__caption')?.textContent).toBe('Box office');
+    release();
+    expect(container.querySelector('.vl-donut__caption')?.textContent).toBe('Total');
+    fireEvent.click(container.querySelector('[data-slice="box"]') as Element);
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+});
+
+describe('DonutChart sheet words', () => {
+  it('speaks Russian with the provider locale and `labels` still override', () => {
+    const restore = emulatePhone();
+    const { container } = render(
+      <VizProvider locale="ru">
+        <DonutChart title="Продажи" data={data} animate={false} labels={{ share: 'Часть' }} />
+      </VizProvider>,
+    );
+    fireEvent.click(container.querySelector('[data-slice="web"]') as Element);
+    const sheet = screen.getByRole('dialog');
+    expect(sheet).toHaveTextContent('Количество');
+    expect(sheet).toHaveTextContent('из 1 000');
+    expect(sheet).toHaveTextContent('Часть');
+    restore();
   });
 });

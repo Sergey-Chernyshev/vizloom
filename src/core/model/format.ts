@@ -85,7 +85,7 @@ export function formatCurrency(v: number, currency: string, locale: Locale = en,
 
 export function formatPercent(v: number, locale: Locale = en, fractionDigits = 1): string {
   if (!Number.isFinite(v)) return '—';
-  return `${nf(locale, fractionDigits).format(v)}${locale.dayFirst ? ' ' : ''}%`;
+  return `${nf(locale, fractionDigits).format(v)}${locale.percentSpace ? ' ' : ''}%`;
 }
 
 /** Duration in ms: "1 d 20 h", "45 min". */
@@ -137,7 +137,7 @@ export function formatDelta(pct: number, locale: Locale = en, options: { arrow?:
   const abs = nf(locale, fractionDigits).format(Math.abs(pct));
   const sign = Number(abs.replace(/[^0-9]/g, '')) === 0 ? '' : pct > 0 ? '+' : '−';
   const arrowChar = dir === 'up' ? '↑ ' : dir === 'down' ? '↓ ' : '';
-  return `${arrow ? arrowChar : ''}${sign}${abs}${locale.dayFirst ? ' ' : ''}%`;
+  return `${arrow ? arrowChar : ''}${sign}${abs}${locale.percentSpace ? ' ' : ''}%`;
 }
 
 const pad2 = (n: number) => String(n).padStart(2, '0');

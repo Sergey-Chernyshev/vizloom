@@ -31,7 +31,7 @@
   stroke-width: 1.5;
 }
 .vl-sparkline__bar {
-  opacity: 0.7;
+  opacity: 0.35;
   transition: opacity var(--vl-duration-fast) var(--vl-ease);
 }
 .vl-sparkline__bar:last-of-type,
@@ -39,7 +39,7 @@
   opacity: 1;
 }
 .vl-sparkline__bar[data-dim] {
-  opacity: 0.3;
+  opacity: 0.2;
 }
 .vl-sparkline--ghost {
   opacity: 0.35;
@@ -116,7 +116,7 @@
 }
 .vl-bar-list__rows {
   display: grid;
-  gap: 2px;
+  gap: var(--vl-space-1);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -127,10 +127,10 @@
   align-items: center;
   gap: var(--vl-space-3);
   inline-size: 100%;
-  min-block-size: 36px;
-  padding: 4px 10px;
+  min-block-size: 44px;
+  padding: var(--vl-space-2) var(--vl-space-3);
   border: 0;
-  border-radius: var(--vl-radius-s);
+  border-radius: var(--vl-radius-m);
   background: transparent;
   color: inherit;
   font: inherit;
@@ -149,16 +149,19 @@ button.vl-bar-list__button:focus-visible {
 }
 .vl-bar-list__bar {
   position: absolute;
-  inset-block: 3px;
+  inset-block: 0;
   inset-inline-start: 0;
   z-index: -1;
   inline-size: var(--vl-bar-w, 0%);
-  border-radius: var(--vl-radius-s);
-  background: color-mix(in srgb, var(--vl-bar-color, var(--vl-accent)) 14%, transparent);
-  transition: inline-size var(--vl-duration-slow) var(--vl-ease-out);
+  border-radius: var(--vl-radius-m);
+  background: color-mix(in srgb, var(--vl-bar-color, var(--vl-text)) var(--vl-bar-mix, 9%), transparent);
+  transition: inline-size 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .vl-bar-list__row[data-selected] .vl-bar-list__bar {
-  background: color-mix(in srgb, var(--vl-bar-color, var(--vl-accent)) 26%, transparent);
+  background: color-mix(in srgb, var(--vl-bar-color, var(--vl-text)) calc(var(--vl-bar-mix, 9%) * 2), transparent);
+}
+button.vl-bar-list__button:hover .vl-bar-list__bar {
+  filter: brightness(1.35);
 }
 .vl-bar-list__row[data-tone='negative'] .vl-bar-list__bar {
   background: var(--vl-negative-soft);
@@ -169,12 +172,13 @@ button.vl-bar-list__button:focus-visible {
 .vl-bar-list__row[data-tone='muted'] {
   color: var(--vl-text-muted);
 }
+.vl-bar-list__row[data-tone='muted'] .vl-bar-list__bar {
+  background: color-mix(in srgb, var(--vl-text) 4%, transparent);
+}
 .vl-bar-list__text {
   display: flex;
   flex: 1;
-  flex-wrap: wrap;
-  align-items: baseline;
-  column-gap: var(--vl-space-2);
+  flex-direction: column;
   min-inline-size: 0;
 }
 .vl-bar-list__icon {
@@ -182,16 +186,18 @@ button.vl-bar-list__button:focus-visible {
 }
 .vl-bar-list__label {
   overflow: hidden;
-  font-size: var(--vl-font-size-m);
+  font-size: var(--vl-font-size-s);
+  font-weight: var(--vl-font-weight-medium);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .vl-bar-list__sub {
   color: var(--vl-text-muted);
-  font-size: var(--vl-font-size-s);
+  font-size: var(--vl-font-size-xs);
+  line-height: calc(15 / 12);
 }
 .vl-bar-list__value {
-  font-size: var(--vl-font-size-m);
+  font-size: var(--vl-font-size-s);
   font-weight: var(--vl-font-weight-semibold);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -213,7 +219,7 @@ button.vl-bar-list__button:focus-visible {
 /* Split bar */
 .vl-split {
   display: grid;
-  gap: var(--vl-space-2);
+  gap: var(--vl-space-4);
   font-family: var(--vl-font-family);
 }
 .vl-split__bar {
@@ -228,7 +234,7 @@ button.vl-bar-list__button:focus-visible {
 }
 .vl-split__part {
   flex: var(--vl-split-grow, 1) 1 0;
-  min-inline-size: 2px;
+  min-inline-size: 4px;
   background: var(--vl-split-color, var(--vl-accent));
   transition:
     flex-grow var(--vl-duration-slow) var(--vl-ease-out),
@@ -323,6 +329,9 @@ button.vl-bar-list__button:focus-visible {
   stroke-width: 2;
   stroke-linecap: round;
 }
+.vl-gauge--arc .vl-gauge__target {
+  stroke-width: 2.5;
+}
 .vl-gauge__caption {
   display: grid;
   justify-items: center;
@@ -331,14 +340,34 @@ button.vl-bar-list__button:focus-visible {
 }
 .vl-gauge--arc .vl-gauge__caption {
   position: absolute;
-  inset-block-start: 38%;
+  inset: 41% 0 0;
+  grid-template-rows: auto auto 1fr;
   margin: 0;
+}
+.vl-gauge--arc .vl-gauge__svg {
+  inline-size: 220px;
+  max-inline-size: 100%;
+}
+.vl-gauge--arc .vl-gauge__sublabel,
+.vl-gauge--arc .vl-gauge__target-label {
+  font-size: var(--vl-font-size-xs);
+  line-height: calc(15 / 12);
+}
+.vl-gauge--arc .vl-gauge__target-label {
+  align-self: end;
+  color: var(--vl-text-secondary);
 }
 .vl-gauge__label {
   font-size: 26px;
   font-weight: var(--vl-font-weight-semibold);
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
+}
+.vl-gauge--arc .vl-gauge__label {
+  font-size: calc(var(--vl-font-size-xl) * 1.8333);
+  font-weight: var(--vl-font-weight-bold, 700);
+  letter-spacing: -0.011em;
+  line-height: 1;
 }
 .vl-gauge__sublabel,
 .vl-gauge__target-label {

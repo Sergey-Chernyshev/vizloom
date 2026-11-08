@@ -408,7 +408,8 @@
 .vl-card__title {
   margin: 0;
   overflow: hidden;
-  font-size: var(--vl-font-size-l);
+  color: var(--vl-card-title-color, inherit);
+  font-size: var(--vl-card-title-size, var(--vl-font-size-l));
   font-weight: var(--vl-font-weight-semibold);
   letter-spacing: -0.01em;
   text-overflow: ellipsis;
@@ -420,7 +421,8 @@
 .vl-card__description {
   margin: 0;
   color: var(--vl-text-muted);
-  font-size: var(--vl-font-size-s);
+  font-size: var(--vl-font-size-xs);
+  line-height: calc(16 / 12);
 }
 .vl-card__actions {
   display: flex;
@@ -450,6 +452,7 @@
   }
   .vl-card__actions {
     inline-size: 100%;
+    justify-content: flex-end;
     overflow-x: auto;
     scrollbar-width: none;
   }

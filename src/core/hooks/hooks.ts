@@ -93,7 +93,7 @@ function subscribeThemeVersion(notify: () => void): () => void {
       themeObserver.observe(document.documentElement, {
         attributes: true,
         subtree: true,
-        attributeFilter: ['class', 'data-vl-theme', 'style'],
+        attributeFilter: ['class', 'data-vl-theme', 'data-vl-palette', 'style'],
       });
     }
     if (typeof window.matchMedia === 'function') {

@@ -359,22 +359,21 @@ function paintGuides(e: TimeEngine): void {
   const p = e.plot;
   ctx.save();
   ctx.font = `500 11px ${e.font}`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'bottom';
   ctx.setLineDash([4, 4]);
   for (const g of guides) {
     if (!(g.value >= 0) || g.value > e.ymax) continue;
     const y = Math.round(e.yOf(g.value)) - 0.5;
-    const color = g.color ? resolveColor(g.color) : C.textSecondary;
-    ctx.strokeStyle = rgba(color, 0.75);
+    ctx.strokeStyle = g.color ? rgba(resolveColor(g.color), 0.75) : rgba(C.text, 0.45);
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(p.left, y);
     ctx.lineTo(p.left + p.width, y);
     ctx.stroke();
     if (g.label) {
-      ctx.fillStyle = rgba(color, 1);
-      ctx.textAlign = 'right';
-      ctx.fillText(g.label, p.left + p.width - 4, y - 5);
-      ctx.textAlign = 'left';
+      ctx.fillStyle = g.color ? rgba(resolveColor(g.color), 1) : rgba(C.textMuted, 1);
+      ctx.fillText(g.label, p.left + 4, y - 4);
     }
   }
   ctx.restore();

@@ -1,4 +1,4 @@
-import { type KeyboardEvent, type ReactNode, useMemo, useRef, useState } from 'react';
+import { type KeyboardEvent, type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 
 import {
   type CategoryChartProps,
@@ -18,12 +18,16 @@ import {
   useFormat,
   useIsomorphicLayoutEffect,
   useLocale,
+  type Locale,
   useTweenedValues,
   VisuallyHidden,
 } from '../../core';
-import { useIsPhone } from '../shared/hooks';
+import { BottomSheet } from '../shared/bottom-sheet';
+import { useIsPhone, useScrub } from '../shared/hooks';
 import { colorOf } from '../shared/series';
-import { arrowTarget, formatShare, isMouse, markState, type TooltipAnchor, useCssVars } from './common';
+import { SheetSummary } from '../shared/sheet-summary';
+import { arrowTarget, elementAt, formatShare, isMouse, markState, type TooltipAnchor, useCssVars } from './common';
+import { DONUT_LABELS_RU, isRu } from './labels';
 import {
   type DonutRow,
   type DonutVariant,
@@ -34,10 +38,32 @@ import {
   polar,
   sliceSweeps,
   slicePath,
+  trackPath,
 } from './donut-model';
 
 /** Rows shown before the tail collapses into "Other": fits the 8-colour palette with the grey bucket. */
 export const DEFAULT_VISIBLE_ROWS = 7;
+
+/** Words of the phone sheet. Defaults follow the locale (English or Russian). */
+export interface DonutLabels {
+  /** Label of the headline stat: the amount of the row. */
+  readonly value: string;
+  readonly share: string;
+  /** "of 1,000". */
+  readonly ofTotal: (total: string) => string;
+  /** Accessible name of the sheet's close button. */
+  readonly close: string;
+}
+
+export const DEFAULT_DONUT_LABELS: DonutLabels = {
+  value: 'Amount',
+  share: 'Share',
+  ofTotal: (total) => `of ${total}`,
+  close: 'Close',
+};
+
+/** Words of the donut sheet for a locale: Russian for `ru`, English otherwise. `labels` overrides any. */
+export const donutLabels = (locale: Locale): DonutLabels => (isRu(locale) ? DONUT_LABELS_RU : DEFAULT_DONUT_LABELS);
 
 export interface DonutChartProps<Key extends string = string> extends CategoryChartProps<Key> {
   /** `ring` (default), `pie` (full) or `semi` (half ring, a gauge-like share). */
@@ -56,6 +82,8 @@ export interface DonutChartProps<Key extends string = string> extends CategoryCh
   readonly centerValue?: string;
   /** The legend list with values and shares next to the drawing. Default true. */
   readonly legend?: boolean;
+  /** Words of the phone sheet (tap a slice or a legend row). */
+  readonly labels?: Partial<DonutLabels>;
 }
 
 function rowColor(row: DonutRow, index: number): string {
@@ -109,10 +137,12 @@ function DonutBody<Key extends string>({
   caption,
   centerValue,
   legend = true,
+  labels,
 }: BodyProps<Key>) {
   const fmt = useFormat();
   const locale = useLocale();
   const phone = useIsPhone();
+  const l = { ...donutLabels(locale), ...labels };
   const geometry = GEOMETRY[variant];
   const span = DONUT_SPAN[variant].span;
   const value = (v: number) => (formatValue ? formatValue(v) : fmt.value(v, unit, true));
@@ -149,6 +179,39 @@ function DonutBody<Key extends string>({
     setActive(next);
     onHover?.(index, null);
   }
+
+  /** Row opened in the phone sheet. */
+  const [sheet, setSheet] = useState<string | null>(null);
+  // Hold and drag on a phone: the finger reads slices and legend rows, the centre follows.
+  const scrub = useScrub<HTMLDivElement>({
+    enabled: phone,
+    onMove: (x, y) => {
+      const hit = elementAt(rootNode, x, y, '[data-slice], [data-legend]');
+      const key = hit?.dataset['slice'] ?? hit?.dataset['legend'];
+      const index = rows.findIndex((r) => r.key === key);
+      if (index >= 0) set(index);
+    },
+    onEnd: () => set(null),
+  });
+  const attachRoot = useCallback(
+    (node: HTMLDivElement | null) => {
+      rootRef(node);
+      scrub.ref(node);
+    },
+    // Both setters are stable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rootRef, scrub.ref],
+  );
+  function tap(index: number) {
+    if (phone && scrub.swallowClick()) return;
+    if (phone) {
+      set(null);
+      setSheet(rows[index]?.key ?? null);
+    }
+    onSelect?.(index, null);
+  }
+  const sheetIndex = sheet === null ? -1 : rows.findIndex((r) => r.key === sheet);
+  const sheetRow = sheetIndex >= 0 ? rows[sheetIndex] : null;
 
   function onSliceKey(event: KeyboardEvent<SVGPathElement>, index: number) {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -197,15 +260,17 @@ function DonutBody<Key extends string>({
   const bigCaption = activeRow ? activeRow.label : (caption ?? locale.strings.total);
   const hasCenter = variant !== 'pie';
   const centerY = variant === 'semi' ? geometry.cy - 22 : geometry.cy - 2;
+  const captionY = variant === 'semi' ? geometry.cy - 2 : geometry.cy + 22;
 
   return (
-    <div ref={rootRef} className="vl-donut__body" onPointerLeave={() => set(null)}>
+    <div ref={attachRoot} className="vl-donut__body vl-scrub-area" onPointerLeave={() => !scrub.scrubbing && set(null)}>
       <div ref={plotRef} className="vl-donut__plot">
         <svg ref={svgRef} className="vl-donut__svg" viewBox={`0 0 ${geometry.width} ${geometry.height}`} role="group" aria-label={title}>
           <title>{title}</title>
           {variant === 'ring' ? (
             <circle cx={geometry.cx} cy={geometry.cy} r={(geometry.ro + geometry.ri) / 2} className="vl-donut__track" />
           ) : null}
+          {variant === 'semi' ? <path d={trackPath(geometry)} className="vl-donut__track" /> : null}
           {arcs.map((arc) => {
             const row = rows[arc.index];
             const state = markState(activeIndex, arc.index);
@@ -224,10 +289,7 @@ function DonutBody<Key extends string>({
                 onFocus={() => set(arc.index)}
                 onBlur={() => set(null)}
                 onKeyDown={(e) => onSliceKey(e, arc.index)}
-                onClick={() => {
-                  if (phone) set(active === row.key ? null : arc.index);
-                  onSelect?.(arc.index, null);
-                }}
+                onClick={() => tap(arc.index)}
               />
             );
           })}
@@ -236,7 +298,7 @@ function DonutBody<Key extends string>({
               <text x={geometry.cx} y={centerY} textAnchor="middle" className="vl-donut__big">
                 {bigValue}
               </text>
-              <text x={geometry.cx} y={centerY + 20} textAnchor="middle" className="vl-donut__caption">
+              <text x={geometry.cx} y={captionY} textAnchor="middle" className="vl-donut__caption">
                 {bigCaption}
               </text>
             </g>
@@ -251,17 +313,20 @@ function DonutBody<Key extends string>({
               <li
                 key={row.key}
                 className="vl-donut__row"
+                data-legend={row.key}
                 data-state={state}
                 data-empty={row.value <= 0 || undefined}
                 onPointerEnter={(e) => isMouse(e) && set(i)}
-                onClick={() => onSelect?.(i, null)}
+                onClick={() => tap(i)}
               >
                 <span className="vl-donut__label" title={row.label}>
-                  <Swatch color={rowColor(row, i)} shape="square" />
+                  <Swatch color={rowColor(row, i)} />
                   <span className="vl-donut__name">{row.label}</span>
                 </span>
-                <span className="vl-donut__share">{formatShare(fmt, total > 0 ? row.value / total : Number.NaN)}</span>
-                <span className="vl-donut__value">{value(row.value)}</span>
+                <span className="vl-donut__figures">
+                  <span className="vl-donut__share">{formatShare(fmt, total > 0 ? row.value / total : Number.NaN)}</span>
+                  <span className="vl-donut__value">{value(row.value)}</span>
+                </span>
               </li>
             );
           })}
@@ -269,15 +334,30 @@ function DonutBody<Key extends string>({
       ) : null}
       {showTooltip ? (
         <ChartTooltip
-          open={activeRow !== null && anchor !== null}
+          open={activeRow !== null && anchor !== null && !phone}
           anchor={anchor}
           bounds={rootSize}
-          dockBelow={phone ? Number.POSITIVE_INFINITY : 0}
           prefer="top"
           aria-label={title}
         >
           {activeRow ? tooltipBody(activeRow, activeIndex) : null}
         </ChartTooltip>
+      ) : null}
+      {phone ? (
+        <BottomSheet open={sheetRow !== null} onClose={() => setSheet(null)} closeLabel={l.close} aria-label={title}>
+          {sheetRow ? (
+            <SheetSummary
+              series={rows.map((r, i) => ({ id: r.key, label: r.label, color: rowColor(r, i) }))}
+              activeId={sheetRow.key}
+              onChange={setSheet}
+              title={sheetRow.label}
+              stats={[
+                { id: 'v', label: l.value, value: value(sheetRow.value), hint: l.ofTotal(value(total)) },
+                { id: 's', label: l.share, value: formatShare(fmt, total > 0 ? sheetRow.value / total : Number.NaN) },
+              ]}
+            />
+          ) : null}
+        </BottomSheet>
       ) : null}
       {description ? <VisuallyHidden>{description}</VisuallyHidden> : null}
       <ChartDataTable

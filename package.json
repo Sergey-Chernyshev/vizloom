@@ -1,6 +1,6 @@
 {
   "name": "vizloom",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "React charts, data tables and dashboard blocks: canvas time series with zoom and touch gestures, themeable with CSS variables, SSR-safe and tree-shakeable.",
   "license": "MIT",
   "author": "Sergey Chernyshev",

@@ -10,3 +10,4 @@ coverage/
 # Internal coordination notes of the build-out; only status files are tracked.
 .kit/*
 !.kit/STATUS*.md
+.pnpm-store/

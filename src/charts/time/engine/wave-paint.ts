@@ -82,8 +82,8 @@ function paintSeries(e: TimeEngine, S: Sample, dim: number): void {
     };
     if (stacked) {
       trace();
-      ctx.strokeStyle = rgba(C.surface, alpha * 0.9 * e.stackMix);
-      ctx.lineWidth = o.lineWidth + 2.5;
+      ctx.strokeStyle = rgba(C.surface, alpha * 0.75 * e.stackMix);
+      ctx.lineWidth = o.lineWidth + 1.25;
       ctx.stroke();
     }
     trace();
